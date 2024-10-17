@@ -7,7 +7,7 @@ SDL_Renderer *renderer = NULL;
 int gfx_w;
 int gfx_h;
 
-bool sdl_init()
+bool gfx_init(int w, int h)
 {
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0)
     {
@@ -15,30 +15,20 @@ bool sdl_init()
         return false;
     }
 
+    gfx_w = w;
+    gfx_h = h;
+
+    SDL_Init(SDL_INIT_EVERYTHING);
+
+    SDL_DisplayMode DM;
+    SDL_GetDesktopDisplayMode(0, &DM);
+
+    SDL_CreateWindowAndRenderer(gfx_w, gfx_h, 0, &window, &renderer);
+    SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+
+    SDL_RenderSetScale(renderer, (float)DM.w / gfx_w, (float)DM.h / gfx_h);
+
     return true;
-}
-
-bool gfx_init(int w, int h)
-{
-    if (sdl_init())
-    {
-        gfx_w = w;
-        gfx_h = h;
-
-        SDL_Init(SDL_INIT_EVERYTHING);
-
-        SDL_DisplayMode DM;
-        SDL_GetDesktopDisplayMode(0, &DM);
-
-        SDL_CreateWindowAndRenderer(gfx_w, gfx_h, 0, &window, &renderer);
-        SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
-
-        SDL_RenderSetScale(renderer, (float)DM.w / gfx_w, (float)DM.h / gfx_h);
-
-        return true;
-    }
-
-    return false;
 }
 
 void gfx_draw(bool gfx[])
