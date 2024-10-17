@@ -23,9 +23,13 @@ typedef struct
 
     unsigned short stack[16];
 
+    bool drawFlag;
+
+    // State of each pixel on the 64x32 display
     bool gfx[CHIP8_GFX_W * CHIP8_GFX_H];
 
-    unsigned char drawFlag;
+    // State of each key on the HEX based keypad
+    bool key[16];
 } Chip8;
 
 // Open and read file with given [directory/]filename. Return whether it succeeded or not
