@@ -24,7 +24,7 @@ bool event_init()
 {
     if (SDL_Init(SDL_INIT_EVENTS) != 0)
     {
-        SDL_Log("Failed to initialize SDL. %s\n", SDL_GetError());
+        SDL_Log("Failed to initialize SDL event subsystem. %s\n", SDL_GetError());
         return false;
     }
 

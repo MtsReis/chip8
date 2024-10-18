@@ -9,9 +9,9 @@ int gfx_h;
 
 bool gfx_init(int w, int h)
 {
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0)
+    if (SDL_Init(SDL_INIT_VIDEO) != 0)
     {
-        SDL_Log("Failed to initialize SDL. %s\n", SDL_GetError());
+        SDL_Log("Failed to initialize SDL video subsystem. %s\n", SDL_GetError());
         return false;
     }
 
