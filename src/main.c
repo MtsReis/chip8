@@ -1,3 +1,5 @@
+#include <time.h>
+
 #include "../include/chip8.h"
 #include "../include/renderer.h"
 #include "../include/event.h"
@@ -6,10 +8,16 @@
 int main()
 {
     Chip8 chip8;
+
+    clock_t time = clock();
+    double deltaTime = 0;
+
     bool halt_execution = false;
 
+    chip8_init(&chip8);
+
     // Try to load rom and initialize subsystems: exit on failure
-    if (!chip8_loadGame("idk.ch8") || !gfx_init(CHIP8_GFX_W, CHIP8_GFX_H) || !event_init() || !audio_init(1337))
+    if (!chip8_loadGame(&chip8, "idk.ch8") || !gfx_init(CHIP8_GFX_W, CHIP8_GFX_H) || !event_init() || !audio_init(1337))
         exit(EXIT_FAILURE);
 
     // Emulation loop
@@ -20,7 +28,7 @@ int main()
         // Clean up initialized subsystems on a quit event
         if (halt_execution)
         {
-            printf("\nShutting down");
+            printf("\nHalting execution");
 
             gfx_destroy();
             event_destroy();
@@ -30,7 +38,22 @@ int main()
             exit(EXIT_SUCCESS);
         }
 
-        chip8_emulateCycle();
+        // Update at what time the cycle is being executed and how much has been passed since last cycle (s)
+        deltaTime = (double)(clock() - time) / CLOCKS_PER_SEC;
+        time = clock();
+        chip8_emulateCycle(&chip8, deltaTime);
+
+        if (chip8.PC >= sizeof(chip8.memory)) {
+            printf("PC exceeded the memory limits.");
+            halt_execution = true;
+            continue;
+        }
+
+        if (chip8.st > 0) {
+            audio_play();
+        } else {
+            audio_stop();
+        }
 
         if (chip8.drawFlag)
             gfx_draw(chip8.gfx);
