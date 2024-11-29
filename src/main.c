@@ -14,7 +14,6 @@ int main(int argc, char*argv[])
 
     bool halt_execution = false;
 
-
     if (argc != 2) {
         fprintf(stderr, "One argument is expected.\n");
         exit(EXIT_FAILURE);
@@ -44,7 +43,7 @@ int main(int argc, char*argv[])
             exit(EXIT_SUCCESS);
         }
 
-        // Update at what time the cycle is being executed and how much has been passed since last cycle (s)
+        // Update at what time the cycle is being executed and how much has passed since last cycle (s)
         deltaTime = (double)(clock() - time) / CLOCKS_PER_SEC;
         time = clock();
         halt_execution = !chip8_emulateCycle(&chip8, deltaTime);
