@@ -15,10 +15,10 @@ int main(int argc, char*argv[])
     bool halt_execution = false;
 
 
-	if (argc != 2) {
-		fprintf(stderr, "One argument expected.\n");
-		exit(EXIT_FAILURE);
-	}
+    if (argc != 2) {
+        fprintf(stderr, "One argument is expected.\n");
+        exit(EXIT_FAILURE);
+    }
 
     chip8_init(&chip8);
 
