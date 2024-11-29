@@ -5,7 +5,7 @@
 #include "../include/event.h"
 #include "../include/audio.h"
 
-int main()
+int main(int argc, char*argv[])
 {
     Chip8 chip8;
 
@@ -14,10 +14,16 @@ int main()
 
     bool halt_execution = false;
 
+
+	if (argc != 2) {
+		fprintf(stderr, "One argument expected.\n");
+		exit(EXIT_FAILURE);
+	}
+
     chip8_init(&chip8);
 
     // Try to load rom and initialize subsystems: exit on failure
-    if (!chip8_loadGame(&chip8, "idk.ch8") || !gfx_init(CHIP8_GFX_W, CHIP8_GFX_H) || !event_init() || !audio_init(1337))
+    if (!chip8_loadGame(&chip8, argv[1]) || !gfx_init(CHIP8_GFX_W, CHIP8_GFX_H) || !event_init() || !audio_init(1337))
         exit(EXIT_FAILURE);
 
     // Emulation loop
@@ -41,10 +47,10 @@ int main()
         // Update at what time the cycle is being executed and how much has been passed since last cycle (s)
         deltaTime = (double)(clock() - time) / CLOCKS_PER_SEC;
         time = clock();
-        chip8_emulateCycle(&chip8, deltaTime);
+        halt_execution = !chip8_emulateCycle(&chip8, deltaTime);
 
         if (chip8.PC >= sizeof(chip8.memory)) {
-            printf("PC exceeded the memory limits.");
+            fprintf(stderr, "PC exceeded the memory limits.");
             halt_execution = true;
             continue;
         }
