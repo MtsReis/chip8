@@ -30,11 +30,14 @@ typedef struct
 
     // State of each key on the HEX based keypad
     bool key[16];
+
+    // Quirks
+    bool shiftQuirk;
 } Chip8;
 
 // Open and read file with given [directory/]filename. Return whether it succeeded or not
 bool chip8_loadGame(Chip8 *chip8, char *file);
 void chip8_init(Chip8 *chip8);
-void chip8_emulateCycle(Chip8 *chip8, double deltaTime);
+bool chip8_emulateCycle(Chip8 *chip8, double deltaTime);
 
 #endif
