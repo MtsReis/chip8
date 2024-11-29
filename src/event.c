@@ -46,8 +46,6 @@ void event_update(bool keypad[16], bool *quit)
             {
                 if (keyMap[i] == e.key.keysym.sym)
                 {
-                    printf("[%d] %s! \n", i, e.type == SDL_KEYDOWN ? "Pressed" : "Released");
-
                     // If it's a KEYDOWN event, stores true, otherwise, KEYUP is assumed and stores false
                     keypad[i] = e.type == SDL_KEYDOWN;
                 }
