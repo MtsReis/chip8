@@ -138,9 +138,6 @@ bool chip8_emulateCycle(Chip8 *chip8, double deltaTime)
     // Update time passed since the lastest cycle for dt and st
     tTimerRegistersFrequency += deltaTime;
 
-    // Update time passed since the lastest instruction execution
-    tProcessorFrequency += deltaTime;
-
     if (tTimerRegistersFrequency >= TIMER_REGISTERS_TIMESTEP)
     { // Cycle completed
         // Reset the time passed and keep the surplus
@@ -150,6 +147,14 @@ bool chip8_emulateCycle(Chip8 *chip8, double deltaTime)
         chip8->dt = (chip8->dt - 1 > 0) ? chip8->dt - 1 : 0;
         chip8->st = (chip8->st - 1 > 0) ? chip8->st - 1 : 0;
     }
+
+    // Skip frequency verification if it's set to an invalid number
+    if (processor_timestep <= 0) {
+        return chip8_runInstruction(chip8);
+    }
+
+    // Update time passed since the lastest instruction execution
+    tProcessorFrequency += deltaTime;
 
     if (tProcessorFrequency >= processor_timestep)
     { // Cycle completed
@@ -525,5 +530,14 @@ void chip8_init(Chip8 *chip8, unsigned int processor_freq)
         sizeof(decodeByHighestNibble)
     );
 
-    processor_timestep = 1.0 / processor_freq;
+    processor_timestep = processor_freq <= 0 ? 0 : 1.0 / processor_freq;
+
+    if (processor_timestep <= 0)
+    {
+        printf("Starting Chip-8 at an unrestricted frequency.\n");
+    }
+    else
+    {
+        printf("Starting Chip-8 at %dHz.\n", processor_freq);
+    }
 }

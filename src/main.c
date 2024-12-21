@@ -13,7 +13,7 @@ int main(int argc, char*argv[])
 
     clock_t time = clock();
     double deltaTime = 0;
-    unsigned int processor_freq = 700;
+    unsigned int processor_freq = 0;
 
     bool halt_execution = false;
 
