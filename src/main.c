@@ -5,12 +5,15 @@
 #include "../include/event.h"
 #include "../include/audio.h"
 
+#include <SDL2/SDL.h>
+
 int main(int argc, char*argv[])
 {
     Chip8 chip8;
 
     clock_t time = clock();
     double deltaTime = 0;
+    unsigned int processor_freq = 700;
 
     bool halt_execution = false;
 
@@ -19,7 +22,7 @@ int main(int argc, char*argv[])
         exit(EXIT_FAILURE);
     }
 
-    chip8_init(&chip8);
+    chip8_init(&chip8, processor_freq);
 
     // Try to load rom and initialize subsystems: exit on failure
     if (!chip8_loadGame(&chip8, argv[1]) || !gfx_init(CHIP8_GFX_W, CHIP8_GFX_H) || !event_init() || !audio_init(1337))

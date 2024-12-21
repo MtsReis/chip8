@@ -9,10 +9,16 @@
 #define PROGRAM_SECTION 512
 
 // 60Hz
-#define TIMESTEP 1.0 / 60.0
+#define TIMER_REGISTERS_TIMESTEP 1.0 / 60.0
+
+// 700Hz by default
+double processor_timestep = 1.0 / 700.0;
 
 // Time passed since latest cycle for dt and st
-double freq_timer = 0;
+double tTimerRegistersFrequency = 0;
+
+// Time passed since the latest instruction execution
+double tProcessorFrequency = 0;
 
 // Predefined sprites (5 bytes long each), from 0 to F
 const char SPRITES[] = {
@@ -130,17 +136,29 @@ bool chip8_runInstruction(Chip8 *c)
 bool chip8_emulateCycle(Chip8 *chip8, double deltaTime)
 {
     // Update time passed since the lastest cycle for dt and st
-    freq_timer += deltaTime;
+    tTimerRegistersFrequency += deltaTime;
 
-    if (freq_timer >= TIMESTEP)
+    // Update time passed since the lastest instruction execution
+    tProcessorFrequency += deltaTime;
+
+    if (tTimerRegistersFrequency >= TIMER_REGISTERS_TIMESTEP)
     { // Cycle completed
+        // Reset the time passed and keep the surplus
+        tTimerRegistersFrequency = tTimerRegistersFrequency - TIMER_REGISTERS_TIMESTEP;
+
         // Decrease dt and st by 1 to a minimum of 0
         chip8->dt = (chip8->dt - 1 > 0) ? chip8->dt - 1 : 0;
         chip8->st = (chip8->st - 1 > 0) ? chip8->st - 1 : 0;
-        freq_timer = freq_timer - TIMESTEP; // Reset the time passed and keep the surplus
     }
 
-    return chip8_runInstruction(chip8);
+    if (tProcessorFrequency >= processor_timestep)
+    { // Cycle completed
+        tProcessorFrequency = tProcessorFrequency - processor_timestep; // Reset and keep the surplus
+
+        return chip8_runInstruction(chip8);
+    }
+
+    return true;
 }
 
 // 0nnn
@@ -466,7 +484,7 @@ bool nibF(unsigned short opCode, Chip8 *c)
     return true;
 }
 
-void chip8_init(Chip8 *chip8)
+void chip8_init(Chip8 *chip8, unsigned int processor_freq)
 {
     // Clear memory
     memset(chip8->memory, 0, sizeof(chip8->memory));
@@ -506,4 +524,6 @@ void chip8_init(Chip8 *chip8)
         },
         sizeof(decodeByHighestNibble)
     );
+
+    processor_timestep = 1.0 / processor_freq;
 }
