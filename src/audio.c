@@ -1,4 +1,5 @@
 #include "../include/audio.h"
+#include <SDL2/SDL.h>
 
 // Define M_PI in case it's not already defined in math.h
 #ifndef M_PI

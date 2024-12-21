@@ -1,7 +1,6 @@
 #ifndef _EVENT_H
 #define _EVENT_H
 
-#include <SDL2/SDL.h>
 #include <stdbool.h>
 
 bool event_init();

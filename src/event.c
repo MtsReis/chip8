@@ -1,4 +1,5 @@
 #include "../include/event.h"
+#include <SDL2/SDL.h>
 
 /*
     Map the SDL Keycodes to a CHIP-8 key from 0 to F
