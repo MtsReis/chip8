@@ -1,3 +1,5 @@
+#include <math.h>
+
 #include "../include/audio.h"
 #include <SDL2/SDL.h>
 
@@ -27,6 +29,12 @@ bool audio_init(double sine_frequency)
     {
         SDL_Log("Failed to initialize SDL audio subsystem. %s\n", SDL_GetError());
         return false;
+    }
+
+    // Avoid undesired values for sine_frequency
+    if (isnan(sine_frequency) || isinf(sine_frequency) || sine_frequency == 0) {
+        printf("'%f' is not a valid value for the sound frequency. Using 264 instead.\n", sine_frequency);
+        sine_frequency = 264.0;
     }
 
     // Set the values to used for calculating each sample
