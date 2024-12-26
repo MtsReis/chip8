@@ -38,8 +38,12 @@ typedef struct
 // Open and read file with given [directory/]filename. Return whether it succeeded or not
 bool chip8_loadGame(Chip8 *chip8, char *file);
 
-// Initialize the chip8 module with given processor frequency
-void chip8_init(Chip8 *chip8, unsigned int processor_freq);
+/*
+ * Initialize the chip8 module with given processor frequency.
+ * If processor_freq is less than or equal to 0, the processor
+ * frequency will be set to unrestricted.
+ */
+void chip8_init(Chip8 *chip8, int processor_freq);
 
 bool chip8_emulateCycle(Chip8 *chip8, double deltaTime);
 

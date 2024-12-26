@@ -489,7 +489,7 @@ bool nibF(unsigned short opCode, Chip8 *c)
     return true;
 }
 
-void chip8_init(Chip8 *chip8, unsigned int processor_freq)
+void chip8_init(Chip8 *chip8, int processor_freq)
 {
     // Clear memory
     memset(chip8->memory, 0, sizeof(chip8->memory));
@@ -538,6 +538,6 @@ void chip8_init(Chip8 *chip8, unsigned int processor_freq)
     }
     else
     {
-        printf("Starting Chip-8 at %dHz.\n", processor_freq);
+        printf("Starting Chip-8 at %uHz.\n", processor_freq);
     }
 }
