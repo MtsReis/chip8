@@ -8,6 +8,7 @@ int gfx_w;
 int gfx_h;
 unsigned char bg[3];
 unsigned char fg[3];
+bool bufferChanged = false;
 
 bool gfx_init(int w, int h, unsigned char bg_colour[3], unsigned char fg_colour[3])
 {
@@ -52,8 +53,15 @@ void gfx_draw(bool gfx[])
             }
         }
     }
+    bufferChanged = true;
+}
 
-    SDL_RenderPresent(renderer);
+void gfx_present()
+{
+    if (bufferChanged) {
+        SDL_RenderPresent(renderer);
+        bufferChanged = false;
+    }
 }
 
 void gfx_destroy()
