@@ -1,0 +1,305 @@
+# -------------------------------------------------- #
+# *** Registers are (loosely) reserved for:
+
+# Stars registers
+# v0 type
+# v1 posX
+# v2 posY
+# v3 sprI
+# v4 sprR
+# v5 sprD
+# v6 sprM
+
+# v7 --
+# v8 --
+# v9 --
+
+# Aux registers
+# va currStar
+# vb index
+# vc aux
+
+# Special registers
+# vd blinkT
+# ve eyesClosed
+# -------------------------------------------------- #
+# *** Importante values ***
+# BIG_STARS_QTY: 2
+# STARS_QTY: 11
+# -------------------------------------------------- #
+
+
+# *** Entry point ***
+0x13 0x3E # JUMP to 830 (Hex33E)
+
+# -------------------------------------------------- #
+# *** MEMORY: STARS (Objects data) ***
+# ADDRESS: 514 (Hex202) --
+
+# Big stars
+# type	posX	posY	sprIndex	reverse		delay		maxIndex	-
+0x01	0x00	0x00	0x2A		0x00		0x00		0x00		0x00
+0x01	0x00	0x00	0x2A		0x00		0x00		0x00		0x00
+0x01	0x00	0x00	0x2A		0x00		0x00		0x00		0x00
+
+# Normal stars
+# type	posX	posY	sprIndex	reverse		delay		maxIndex	-
+0x00	0x0C	0xFF	0x00		0x00		0x0A		0x0E		0x00
+0x00	0x14	0x0C	0x00		0x00		0x26		0x0E		0x00
+0x00	0x34	0x14	0x00		0x00		0x1E		0x0E		0x00
+0x00	0x1C	0x14	0x00		0x00		0x07		0x0E		0x00
+0x00	0x2C	0x03	0x00		0x00		0x11		0x0E		0x00
+0x00	0x04	0x15	0x00		0x00		0x00		0x0E		0x00
+0x00	0x0C	0x0C	0x00		0x00		0x47		0x0E		0x00
+0x00	0x34	0xFF	0x00		0x00		0x3C		0x0E		0x00
+# -------------------------------------------------- #
+
+# -------------------------------------------------- #
+# *** ROUTINE: Update ***
+# ADDRESS: 602 (Hex25A) --
+    0x6B 0x00 # index = 0
+
+    # *** LOOP ***
+    # ADDRESS: 604 (Hex25C) --
+    0x6F 0x0B # vf = STARS_QTY (11)
+        0x8F 0xB7 # vf -= index
+        # while (index >= STARS_QTY)
+        0x3F 0x00 # Skip if vf == 0 (STARS_QTY < index) <=> (index >= STARS_QTY)
+        0x00 0xEE # Return - End of "Update"
+
+        0x8A 0xB0 # currStar = index
+        0x8A 0xAE 0x8A 0xAE 0x8A 0xAE # currStar = currStar << 3 (currStar * 8)
+
+        0xA2 0x02 # I = Hex202 (Mem address for "STARS")
+        0xFA 0x1E # I += currStar (Address offset so each star object is bound to an index during the loop)
+        0xF7 0x65 # LD v7, [I] (Load the 8-bytes object into registers V0 to V7 in order)
+
+        0x40 0x00 # Skip Next if type != 0
+            0x22 0xAA # CALL Hex2AA (UpdateStar)
+        
+        0x40 0x01 # Skip Next if type != 1 TODO
+            0x22 0xE2 # CALL Hex2E2 (UpdateBigStar)
+        
+        0xA2 0x02 # I = Hex202 (Mem address for "STARS")
+        0xFA 0x1E # I += currStar (Address offset so each star object is bound to an index during the loop)
+        0xF7 0x55 # LD [I], v7 (Save the 8-bytes values from registers V0 to V7 to the memory)
+
+        0x7B 0x01 # index++
+    0x12 0x5C # Jump to Hex25c (Start of the loop)
+0x00 0xEE # Return
+
+# *** ROUTINE: Draw ***
+# ADDRESS: 646 (Hex286) --
+    0x6B 0x00 # index = 0
+
+    # *** LOOP ***
+    # ADDRESS: 648 (Hex288) --
+    0x6F 0x0B # vf = STARS_QTY (11)
+        0x8F 0xB7 # vf -= index
+        # while (index >= STARS_QTY)
+        0x3F 0x00 # Skip if vf == 0 (STARS_QTY < index) <=> (index >= STARS_QTY)
+        0x00 0xEE # Return - End of "Update"
+
+        0x8A 0xB0 # currStar = index
+        0x8A 0xAE 0x8A 0xAE 0x8A 0xAE # currStar = currStar << 3 (currStar * 8)
+
+        0xA2 0x02 # I = Hex202 (Mem address for "STARS")
+        0xFA 0x1E # I += currStar (Address offset so each star object is bound to an index during the loop)
+        0xF7 0x65 # LD v7, [I] (Load the 8-bytes object into registers V0 to V7 in order)
+
+        0xA3 0x9E # I = Hex39E (Mem address for "STAR_SPR") TODO
+        0xF3 0x1E # I += sprI (Move I to the correct sprite frame)
+        0xD1 0x27 # DRW posX posY 7 (Draw the 7-bytes frame)
+
+        0x7B 0x01 # index++
+    0x12 0x88 # Jump to Hex288 (Start of the loop)
+0x00 0xEE # Return
+
+# *** ROUTINE: UpdateStar ***
+# ADDRESS: 682 (Hex2AA) --
+    # Initial sprD value
+    0x8C 0x50 # aux = sprD
+
+    # TODO: Optmize this
+
+    # If sprD > 0, decrement and exit the routine
+    0x6F 0x00 # vf = 0
+    0x8F 0xC5 # vf -= aux
+    0x4F 0x00 # Skip Next if vf != 0
+        0x75 0xFF # sprD-- (sprD += FF) [if aux > 0]
+
+    0x6F 0x00 # vf = 0
+    0x8F 0xC5 # vf -= aux
+    0x4F 0x00 # Skip Next if vf != 0
+        0x00 0xEE # Return [if aux > 0]
+
+    # sprI goes back and forth between 0 and sprM
+    0x44 0x00 # Skip Next if sprR != 0
+        0x73 0x08 # sprI += 8 [if sprR == 0]
+
+    0x6F 0x01 # vf = 1
+    0x8F 0x47 # sprR -= vf
+    0x3F 0x00 # Skip Next if vf == 0 (if sprR - 1 BORROWS <=> if sprR < 1)
+        0x73 0xF8 # sprI -= 8 [if sprR >= 1]
+
+    0x8F 0x60 # vf = sprM
+    0x8F 0x37 # sprI -= vf
+    0x3F 0x00 # Skip Next if vf == 0 (if sprI - sprM BORROWS <=> if sprI < sprM)
+        0x64 0x01 # sprR = 1 [if sprI >= sprM]
+
+    0x43 0x00 # Skip Next if sprI != 0
+        0x64 0x00 # sprR = 0 [if sprI == 0]
+
+    0x43 0x00 # Skip Next if sprI != 0
+        0xC5 0x3F # sprD = RANDOM & 0b00111111 (0 - 95) [if sprI == 0]
+
+    # sprM is randomly defined to either 8 or 16
+    0x43 0x00 # Skip Next if sprI != 0
+        0xC6 0x08 # sprM = RANDOM & 0b00001000 (0 or 8) [if sprI == 0]
+    0x46 0x00 # Skip Next if sprM != 0
+        0x66 0x10 # sprM = 16 [if sprM == 0]
+0x00 0xEE # Return
+
+# *** ROUTINE: UpdateBigStar ***
+# ADDRESS: 738 (Hex2E2) --
+    # Initial sprD value
+    0x8C 0x50 # aux = sprD
+
+    # If sprD > 0, decrement and exit the routine
+    0x6F 0x00 # vf = 0
+    0x8F 0xC5 # vf -= aux
+    0x4F 0x00 # Skip Next if vf != 0
+        0x75 0xFF # sprD-- (sprD += FF) [if aux > 0]
+
+    0x6F 0x00 # vf = 0
+    0x8F 0xC5 # vf -= aux
+    0x4F 0x00 # Skip Next if vf != 0
+        0x00 0xEE # Return [if aux > 0]
+
+    # Increase by 8 (spr size) until reaching 42 (last spr for stars)
+    0x73 0x08 # sprI += 8 [if sprR == 0]
+    0x6F 0x2A # v = 42
+    0x8F 0x37 # sprI -= vf
+    0x3F 0x00 # Skip Next if vf == 0 (if sprI - 42 BORROWS <=> if sprI < 42)
+        0x23 0x00 # CALL Hex300 (ResetBigStar) [if sprI >= 42]
+0x00 0xEE # Return
+
+# *** ROUTINE: ResetBigStar ***
+# ADDRESS: 768 (Hex300) --
+    0xC1 0x07 # posX = RANDOM & 0b00000111 (0 - 7)
+    0xC2 0x03 # posY = RANDOM & 0b00000011 (0 - 3)
+    0xC5 0xF8 # sprD = RANDOM & 0b11111000 (Multiple of 8)
+
+    # Under the sprite
+    0x41 0x03 # Skip Next if posX != 3
+        0x62 0x03 # posY = 3 [if posX == 3]
+
+    0x41 0x04 # Skip Next if posX != 4
+        0x62 0x03 # posY = 3 [if posX == 4]
+
+    0x81 0x1E 0x81 0x1E 0x81 0x1E # posX = posX << 3 (posX * 8)
+    0x82 0x2E 0x82 0x2E 0x82 0x2E # posY = posY << 3 (posY * 8)
+
+    0x63 0x00 # sprI = 0
+0x00 0xEE # Return
+
+# *** ROUTINE: Blink ***
+# ADDRESS: 798 (Hex31E) --
+    # Here the registers are not connected to stars objects
+    0x60 0x1D # v0 = 29
+    0x61 0x04 # v1 = 4
+    0xA3 0xCE # I = Hex3CE (Mem address for "EYES_SPR")
+    0xD0 0x11 # DRW v0 v1 1 (Draw the 1-byte sprite)
+
+    0x4E 0x01 # Skip Next if eyesClosed != 1
+        0xCD 0x3F # blinkT = RANDOM & 0b00111111 (63) [if eyesClosed == 1]
+
+    # Eyes closed lasts for 1 main cycle
+    0x4E 0x00 # Skip Next if eyesClosed != 0
+        0x6D 0x01 # blinkT = 1 [if eyesClosed == 0]
+
+    # Sound
+    0x6C 0x00 # aux = 0
+    0x4E 0x00 # Skip Next if eyesClosed != 0
+        0x6C 0x03 # aux = 3 [if eyesClosed == 0]
+
+    0xFC 0x18 # ST = aux
+
+    # Min value for blinkT
+    0x7D 0x01 # blinkT++
+
+    0x6C 0x01 # aux = 1
+    0x8E 0xC3 # eyesClosed ^= aux (eyesClosed = !eyesClosed)
+0x00 0xEE # Return
+
+# -------------------------------------------------- #
+# *** Entry point ***
+# ADDRESS: 830 (Hex33E) --
+# Here the registers are not connected to stars objects
+
+## Main sprite ##
+0x60 0x18 # v0 = 24 (Center: (screenW - sprW) / 2)
+0x61 0x00 # v1 = 0 (Top)
+0xA3 0x74 # I = Hex374 (Mem address for "TINGO_SPR")
+0xD0 0x1F # DRW v0 v1 15 (Draw 15 bytes of the sprite)
+
+0x71 0x0F # v1 += 15
+0xF1 0x1E # I += v1
+0xD0 0x16 # DRW v0 v1 6 (Draw the remaining 6 bytes of the sprite)
+
+# Second half #
+0x61 0x06 # v1 = 6 (temporarily use v1 as an aux register)
+0xF1 0x1E # I += v1 (skip the drawn 6 bytes)
+0x70 0x08 # v0 += 8 (8 pixels to the right)
+0x61 0x00 # v1 = 0 (Top)
+0xD0 0x1F # DRW v0 v1 15 (Draw 15 bytes of the right side)
+
+0x71 0x0F # v1 += 15
+0xF1 0x1E # I += v1
+0xD0 0x16 # DRW v0 v1 6 (Draw the remaining 6 bytes of the right side)
+
+# *** LOOP ***
+# ADDRESS: 860 (Hex35C) --
+0x6F 0x0F # vf = 15 (1/4 of a second)
+    0xFF 0x15 # DT = vf (delay 15)
+
+    0x22 0x5A # CALL Hex25A (Update)
+    0x22 0x86 # CALL Hex286 (Draw)
+
+    # *** LOOP ***
+    # ADDRESS: 868 (Hex364) --
+    # Does not proceed until Delay Timer is 0
+    0xFF 0x07 # vf = DT
+        0x3F 0x00 # Skip Next if vf == 0
+    0x13 0x64 # Jump to Hex364 (Start of the loop) [if vf != 0]
+
+    # Redraw to clear the screen instead of running 00E0 so the main spr isn't touched
+    0x22 0x86 # CALL Hex286 (Draw)
+
+    0x4D 0x00 # Skip Next if blinkT != 0
+        0x23 0x1E # CALL Hex31E (Blink) [if blinkT == 0]
+    0x7D 0xFF # blinkT -= 1 (blinkT += 0FF)
+0x13 0x5C # Jump to Hex35C (Start of the loop)
+# -------------------------------------------------- #
+
+# -------------------------------------------------- #
+# *** MEMORY: TINGO_SPR (Sprite data) ***
+# ADDRESS: 884 (Hex374) --
+0x37 0x48 0x80 0x80 0x94 0xB4 0xD0 0x13 0x11 0x08 0x07 0x08 0x08 0x08 0x10
+0x20 0x20 0x25 0x55 0x4D 0x32
+
+0xD8 0x24 0x02 0x02 0x52 0x5A 0x16 0x90 0x10 0x20 0xC0 0x20 0x20 0x20 0x10
+0x08 0x08 0x48 0x54 0x64 0x98
+
+# *** MEMORY: STAR_SPR (Sprite data) ***
+# ADDRESS: 926 (Hex39E) --
+0x00 0x00 0x00 0x10 0x00 0x00 0x00 0x00
+0x00 0x00 0x10 0x38 0x10 0x00 0x00 0x00
+0x00 0x10 0x38 0x6C 0x38 0x10 0x00 0x00
+0x10 0x10 0x38 0xEE 0x38 0x10 0x10 0x00
+0x10 0x10 0x00 0xD6 0x00 0x10 0x10 0x00
+0x10 0x00 0x00 0x92 0x00 0x00 0x10 0x00
+
+# *** MEMORY: EYES_SPR (Sprite data) ***
+# ADDRESS: 974 (Hex3CE) --
+0x88
