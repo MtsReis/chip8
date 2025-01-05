@@ -9,6 +9,9 @@
 
 #include <SDL2/SDL.h>
 
+// 120Hz
+#define PRESENTATION_TIMESTEP 1.0 / 120.0
+
 // Extract the RGB values from a string that follows the format "#RRGGBB"
 bool parseRGB(const char *str, unsigned char channel[3]);
 
@@ -23,6 +26,10 @@ int main(int argc, char *argv[])
 
     clock_t time = clock();
     double deltaTime = 0;
+    srand(time);
+
+    // Time passed since latest presentation cycle
+    double tPresentationFrequency = 0;
 
     bool halt_execution = false;
 
@@ -181,6 +188,15 @@ int main(int argc, char *argv[])
 
         if (chip8.drawFlag)
             gfx_draw(chip8.gfx);
+
+        // Update time passed since the lastest frame presented
+        tPresentationFrequency += deltaTime;
+
+        if (tPresentationFrequency >= PRESENTATION_TIMESTEP)
+        {
+            tPresentationFrequency = tPresentationFrequency - PRESENTATION_TIMESTEP;
+            gfx_present();
+        }
     }
 }
 
